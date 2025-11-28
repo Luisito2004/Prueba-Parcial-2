@@ -22,31 +22,55 @@ val catalogo: List[Libro] = List(
   Libro("Redes de Computadores", "Luis Andrade", 435, 2019)
 )
 
-
-//Se pide implementar un método que, a partir de la lista de Libro, devuelva un valor de tipo AutorInfo que represente al autor más productivo bajo
-// los criterios indicados (mínimo de páginas y año mínimo).
-
-//En lugar de usar funciones avanzadas como groupBy, el método debe aplicar un algoritmo manual, que se puede describir así de manera general:
-
-//Primero, tomar solo los libros que cumplen las condiciones (páginas y año).
-//A partir de esos libros filtrados, obtener la lista de autores sin repetir.
-//Para cada autor de esa lista, recorrer la colección de libros filtrados y calcular cuántas páginas suma y cuántos libros tiene.
-//Construir un objeto AutorInfo para cada autor con esos datos.
-//Finalmente, recorrer la colección de AutorInfo y quedarse con aquel cuyo campo totalPaginas sea el mayor.
-//Si no hubiera libros que cumplan las condiciones, el método debe indicar que no existe resultado.
-
-
 case class AutorInfo(autor: String, totalPaginas: Int, cantidadLibros: Int)
 
 
 
-//val productividad = (lista: List[Libro]) => catalogo.map(n => n.paginas.toDouble / n.anio)
+def autorMasProductivo(catalogo: List[Libro], paginasMin: Int, anioMin: Int): Option[AutorInfo] = {
 
-def productividad(lista: List[Libro]): Double = catalogo.map(n => n.paginas.toDouble / n.anio).sum / catalogo.length
-productividad(catalogo)
+  // 1. Filtrar libros según condiciones
+  val filtrados = catalogo.filter(lib => lib.paginas >= paginasMin && lib.anio >= anioMin)
 
-val autores = (lista: List[Libro]) => catalogo.map(n => n.paginas.toDouble / n.anio)
-def autoresProductivos(lista: List[Double]): List[Double] = autores.filter()
+  // Si no hay libros, no hay resultado
+  if (filtrados.isEmpty) return None
+
+  // 2. Obtener autores sin repetir (manual)
+  var autores: List[String] = List()
+  for (lib <- filtrados) {
+    if (!autores.contains(lib.autor)) autores = autores :+ lib.autor
+  }
+
+  // 3. Construir AutorInfo para cada autor
+  var listaAutorInfo: List[AutorInfo] = List()
+
+  for (autor <- autores) {
+    var totalPag = 0
+    var totalLibros = 0
+
+    // Contar manualmente
+    for (lib <- filtrados) {
+      if (lib.autor == autor) {
+        totalPag += lib.paginas
+        totalLibros += 1
+      }
+    }
+
+    listaAutorInfo = listaAutorInfo :+ AutorInfo(autor, totalPag, totalLibros)
+  }
+
+  // 4. Elegir el AutorInfo con más páginas totales
+  var mejor: AutorInfo = listaAutorInfo.head
+  for (info <- listaAutorInfo.tail) {
+    if (info.totalPaginas > mejor.totalPaginas) mejor = info
+  }
+
+  Some(mejor)
+}
+
+
+autorMasProductivo(catalogo, 200, 2015)
+
+
 
 
 
