@@ -26,46 +26,44 @@ case class AutorInfo(autor: String, totalPaginas: Int, cantidadLibros: Int)
 
 
 
-def autorMasProductivo(catalogo: List[Libro], paginasMin: Int, anioMin: Int): Option[AutorInfo] = {
+def autorMasProductivo(
+                        lista: List[Libro],
+                        minPaginas: Int,
+                        minAnio: Int
+                      ): Option[AutorInfo] = {
 
-  // 1. Filtrar libros según condiciones
-  val filtrados = catalogo.filter(lib => lib.paginas >= paginasMin && lib.anio >= anioMin)
+  // 1. Filtrar libros que cumplen condiciones
+  val filtrados = lista.filter(l => l.paginas >= minPaginas && l.anio >= minAnio)
 
-  // Si no hay libros, no hay resultado
+  // Si no hay nada, fin
   if (filtrados.isEmpty) return None
 
-  // 2. Obtener autores sin repetir (manual)
-  var autores: List[String] = List()
-  for (lib <- filtrados) {
-    if (!autores.contains(lib.autor)) autores = autores :+ lib.autor
-  }
+  // 2. Autores sin repetir
+  val autores = filtrados.map(_.autor).distinct
 
-  // 3. Construir AutorInfo para cada autor
-  var listaAutorInfo: List[AutorInfo] = List()
+  // 3. Construir lista de AutorInfo manualmente
+  val infoAutores = autores.map { autor =>
 
-  for (autor <- autores) {
-    var totalPag = 0
-    var totalLibros = 0
-
-    // Contar manualmente
-    for (lib <- filtrados) {
-      if (lib.autor == autor) {
-        totalPag += lib.paginas
-        totalLibros += 1
+    // Recorrer libros filtrados acumulando manualmente
+    val (totalPaginas, cantidadLibros) =
+      filtrados.foldLeft((0, 0)) { case ((pags, cant), libro) =>
+        if (libro.autor == autor)
+          (pags + libro.paginas, cant + 1)
+        else
+          (pags, cant)
       }
-    }
 
-    listaAutorInfo = listaAutorInfo :+ AutorInfo(autor, totalPag, totalLibros)
+    AutorInfo(autor, totalPaginas, cantidadLibros)
   }
 
-  // 4. Elegir el AutorInfo con más páginas totales
-  var mejor: AutorInfo = listaAutorInfo.head
-  for (info <- listaAutorInfo.tail) {
-    if (info.totalPaginas > mejor.totalPaginas) mejor = info
+  // 4. Elegir el AutorInfo con más páginas
+  val mejor = infoAutores.reduce { (a, b) =>
+    if (a.totalPaginas >= b.totalPaginas) a else b
   }
 
   Some(mejor)
 }
+
 
 
 autorMasProductivo(catalogo, 200, 2015)
